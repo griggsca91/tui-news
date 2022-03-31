@@ -80,7 +80,7 @@ fn main() -> Result<(), io::Error> {
     }
     let result = api::api();
     match result {
-        Ok(_) => println!("ok returned"),
+        Ok(result) => println!("ok returned {:?}", result),
         Err(err) => println!("error {:?}", err),
     }
 
