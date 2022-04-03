@@ -29,8 +29,6 @@ pub fn api() -> Result<Vec<HNItem>, APIError> {
         }
 
         let json: HNResult = serde_json::from_str(&*new_response).unwrap();
-        println!("{:?}", json);
-        println!("{:?}", json.ids);
         let items: Vec<HNItem> = json
             .ids
             .iter()
@@ -40,7 +38,6 @@ pub fn api() -> Result<Vec<HNItem>, APIError> {
         return Ok(items);
     }
 
-    println!("junk");
     Ok(vec![])
 }
 
@@ -53,7 +50,6 @@ fn get_hn_story(id: &i32) -> Result<HNItem, Box<dyn Error>> {
     match body {
         Ok(result) => {
             let response = result.text()?;
-            println!("response, {}", response);
             let item: HNItem = serde_json::from_str(&*response)?;
             Ok(item)
         }
@@ -67,15 +63,27 @@ fn get_hn_story(id: &i32) -> Result<HNItem, Box<dyn Error>> {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct HNItem {
     id: i32,
-    title: String,
+    pub title: String,
 
     #[serde(default)]
-    url: String,
+    pub url: String,
     score: i32,
 
     #[serde(with = "ts_seconds")]
     time: DateTime<Utc>,
+}
+
+impl Default for HNItem {
+    fn default() -> HNItem {
+        HNItem {
+            id: 0,
+            title: "".to_string(),
+            url: "".to_string(),
+            score: 0,
+            time: chrono::prelude::Utc::now(),
+        }
+    }
 }

@@ -1,5 +1,3 @@
-mod api;
-
 use tui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
@@ -7,7 +5,8 @@ use tui::{
     widgets::{List, ListItem},
     Frame,
 };
-use tui_news::App;
+
+use open;
 
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
@@ -24,12 +23,19 @@ use tui::{
     Terminal,
 };
 
+mod api;
+mod app;
+
 fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
     let mut last_tick = Instant::now();
 
     let tick_rate = Duration::from_millis(250);
 
-    let mut app = App::new();
+    let result = api::hacker_news::api();
+    let mut app = match result {
+        Ok(result) => app::App::new(result),
+        Err(err) => app::App::default(),
+    };
 
     loop {
         terminal.draw(|f| {
@@ -47,6 +53,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
                     KeyCode::Down => app.items.next(),
                     KeyCode::Up => app.items.previous(),
                     KeyCode::Left => app.items.unselect(),
+                    KeyCode::Enter => open::that(app.items.selected_object().url).unwrap(),
                     _ => {}
                 }
             }
@@ -78,16 +85,11 @@ fn main() -> Result<(), io::Error> {
     if let Err(err) = res {
         println!("{:?}", err)
     }
-    let result = api::api();
-    match result {
-        Ok(result) => println!("ok returned {:?}", result),
-        Err(err) => println!("error {:?}", err),
-    }
 
     Ok(())
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut app::App) {
     // Create two chunks with equal horizontal screen space
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -100,13 +102,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .items
         .iter()
         .map(|i| {
-            let mut lines = vec![Spans::from(i.0)];
-            for _ in 0..i.1 {
-                lines.push(Spans::from(Span::styled(
-                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                    Style::default().add_modifier(Modifier::ITALIC),
-                )));
-            }
+            let lines = vec![Spans::from(i.title.clone()), Spans::from(i.url.clone())];
             ListItem::new(lines).style(Style::default().fg(Color::Black).bg(Color::White))
         })
         .collect();
