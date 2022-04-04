@@ -60,11 +60,11 @@ impl<T: NewTrait> StatefulList<T> {
 }
 
 pub struct App {
-    pub items: StatefulList<crate::api::hacker_news::HNItem>,
+    pub items: StatefulList<crate::api::hnitem::HNItem>,
 }
 
 impl App {
-    pub fn new(hnitems: Vec<crate::api::hacker_news::HNItem>) -> App {
+    pub fn new(hnitems: Vec<crate::api::hnitem::HNItem>) -> App {
         App {
             items: StatefulList::with_items(hnitems),
         }

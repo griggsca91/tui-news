@@ -1,8 +1,6 @@
 use std::{error::Error, fmt};
 
-use chrono::serde::ts_seconds;
-use chrono::{DateTime, Utc};
-
+use crate::api::hnitem;
 use serde::Deserialize;
 
 #[derive(Debug, Clone)]
@@ -14,7 +12,7 @@ impl fmt::Display for APIError {
     }
 }
 
-pub fn api() -> Result<Vec<HNItem>, APIError> {
+pub fn top_stories(limit: usize) -> Result<Vec<hnitem::HNItem>, APIError> {
     let body = reqwest::blocking::get(
         "https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty",
     );
@@ -29,10 +27,10 @@ pub fn api() -> Result<Vec<HNItem>, APIError> {
         }
 
         let json: HNResult = serde_json::from_str(&*new_response).unwrap();
-        let items: Vec<HNItem> = json
+        let items: Vec<hnitem::HNItem> = json
             .ids
             .iter()
-            .take(10)
+            .take(limit)
             .map(|id| get_hn_story(id).unwrap())
             .collect();
         return Ok(items);
@@ -41,7 +39,7 @@ pub fn api() -> Result<Vec<HNItem>, APIError> {
     Ok(vec![])
 }
 
-fn get_hn_story(id: &i32) -> Result<HNItem, Box<dyn Error>> {
+fn get_hn_story(id: &i32) -> Result<hnitem::HNItem, Box<dyn Error>> {
     let body = reqwest::blocking::get(format!(
         "https://hacker-news.firebaseio.com/v0/item/{}.json",
         id
@@ -50,40 +48,9 @@ fn get_hn_story(id: &i32) -> Result<HNItem, Box<dyn Error>> {
     match body {
         Ok(result) => {
             let response = result.text()?;
-            let item: HNItem = serde_json::from_str(&*response)?;
+            let item: hnitem::HNItem = serde_json::from_str(&*response)?;
             Ok(item)
         }
-        Err(_) => Ok(HNItem {
-            id: todo!(),
-            title: todo!(),
-            url: todo!(),
-            score: todo!(),
-            time: todo!(),
-        }),
-    }
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct HNItem {
-    id: i32,
-    pub title: String,
-
-    #[serde(default)]
-    pub url: String,
-    score: i32,
-
-    #[serde(with = "ts_seconds")]
-    time: DateTime<Utc>,
-}
-
-impl Default for HNItem {
-    fn default() -> HNItem {
-        HNItem {
-            id: 0,
-            title: "".to_string(),
-            url: "".to_string(),
-            score: 0,
-            time: chrono::prelude::Utc::now(),
-        }
+        Err(_) => Ok(hnitem::HNItem::default()),
     }
 }

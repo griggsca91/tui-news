@@ -6,8 +6,6 @@ use tui::{
     Frame,
 };
 
-use open;
-
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -31,12 +29,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
 
     let tick_rate = Duration::from_millis(250);
 
-    let result = api::hacker_news::api();
-    let mut app = match result {
-        Ok(result) => app::App::new(result),
-        Err(err) => app::App::default(),
-    };
-
+    let mut app = load_data();
     loop {
         terminal.draw(|f| {
             ui(f, &mut app);
@@ -50,9 +43,9 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
             if let Event::Key(key) = event::read()? {
                 match key.code {
                     KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Char('r') => app = load_data(),
                     KeyCode::Down => app.items.next(),
                     KeyCode::Up => app.items.previous(),
-                    KeyCode::Left => app.items.unselect(),
                     KeyCode::Enter => open::that(app.items.selected_object().url).unwrap(),
                     _ => {}
                 }
@@ -61,6 +54,14 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
         if last_tick.elapsed() >= tick_rate {
             last_tick = Instant::now();
         }
+    }
+}
+
+fn load_data() -> app::App {
+    let result = api::hacker_news::top_stories(20);
+    match result {
+        Ok(result) => app::App::new(result),
+        Err(_err) => app::App::default(),
     }
 }
 
