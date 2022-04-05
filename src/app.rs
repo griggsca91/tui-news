@@ -44,10 +44,6 @@ impl<T: NewTrait> StatefulList<T> {
         self.state.select(Some(i));
     }
 
-    pub fn unselect(&mut self) {
-        self.state.select(None);
-    }
-
     pub fn selected_object(&self) -> T {
         let object = if let Some(index) = self.state.selected() {
             self.items[index].clone()
