@@ -1,6 +1,6 @@
 [package]
 name = "tui-news"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "TUI for hacker news"
 readme = "readme.md"
