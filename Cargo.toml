@@ -6,7 +6,7 @@ description = "TUI for hacker news"
 readme = "readme.md"
 repository = "https://github.com/griggsca91/tui-news"
 license = "MIT"
-keywords = ["hacker news", "cli"]
+keywords = ["hackernews", "cli"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
